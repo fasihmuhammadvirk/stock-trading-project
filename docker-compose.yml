@@ -1,0 +1,10 @@
+version: '3.9'
+
+services:
+
+  django:
+    build: .
+    command: python3 manage.py runserver
+    ports:
+      - "8000:8000"
+
