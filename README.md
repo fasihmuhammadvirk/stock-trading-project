@@ -20,6 +20,7 @@ This project is a stock trading application built with Django and PostgreSQL. It
 ```bash
 git clone https://github.com/fasihmuhammadvirk/stock-trading-project.git
 cd stock-trading-project
+```
 
 ### 2.Create a .env file where in your main folder
 
