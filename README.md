@@ -61,7 +61,7 @@ docker-compose down
 
 ### 1. Clone the Repository
 ```bash 
-git clone https://github.com/yourusername/stock-trading-project.git
+git clone https://github.com/fasihmuhammadvirk/stock-trading-project.git
 cd stock-trading-project
 ```
 ### 2. Create and Activate a Virtual Environment
@@ -109,4 +109,5 @@ python manage.py test
 
 ## Troubleshooting
 **Connection** Issues: Ensure that your .env file has the correct database credentials and that your AWS RDS instance allows connections from your Docker container or local machine.
+
 **Database** Migrations: If you encounter issues with migrations, check your database configuration and make sure your database is correctly set up.
