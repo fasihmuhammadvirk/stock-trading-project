@@ -76,7 +76,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'stock_trading_project.wsgi.application'
 
 
-# Database
+# Default Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 ## to use the default sqlite database
@@ -88,14 +88,27 @@ WSGI_APPLICATION = 'stock_trading_project.wsgi.application'
 # }
 
 # to use the postgres database that is set up in my local machine 
+# import os
+# import dj_database_url
 
-import os
-import dj_database_url
+# # DATABASES = {
+# #     'default': dj_database_url.parse('postgresql://postgres:1213@localhost:5433/stock_trading_db')
+# # }
 
+from dotenv import load_dotenv
+load_dotenv()
+
+# using the AWS database 
 DATABASES = {
-    'default': dj_database_url.parse('postgresql://postgres:1213@localhost:5433/stock_trading_db')
+  'default': {
+    'ENGINE': 'django.db.backends.postgresql',
+    'NAME': 'stock_trading_db',
+    'USER': 'postgres',
+    'PASSWORD': os.getenv('DB_PASSWORD') ,
+    'HOST': os.getenv('DB_HOST'),
+    'PORT': '5432',
+  }  
 }
-
 
 
 # Password validation
