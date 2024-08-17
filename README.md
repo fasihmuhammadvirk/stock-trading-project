@@ -26,13 +26,14 @@ cd stock-trading-project
 ```bash 
 DB_PASSWORD=your_db_password 
 DB_HOST=your_aws_rds_endpoint 
+```
 
 Replace your_db_password and your_aws_rds_endpoint with your actual database password and RDS endpoint.
 ### 3. Build and Run 
 Use Docker Compose to build and start the application:
 ```bash
 docker-compose up --build
-
+```
 This command will build the Docker image and start the application in a Docker container.
 
 ### 4. Apply Database Migrations
@@ -40,7 +41,7 @@ Once the container is up and running, apply the initial migrations to set up the
 
 ```bash 
 docker-compose exec web python manage.py migrate
-
+```
 ### 5. Access the Application
 
 After starting the containers, you can access the application at http://localhost:8000.
@@ -49,37 +50,37 @@ After starting the containers, you can access the application at http://localhos
 
 ```bash 
 docker-compose exec web python manage.py test
-
+```
 ### 7. Stopping the Containers
 
 ```bash 
 docker-compose down
-
+```
 ## Without Docker (Local Development)
 
 ### 1. Clone the Repository
 ```bash 
 git clone https://github.com/yourusername/stock-trading-project.git
 cd stock-trading-project
-
+```
 ### 2. Create and Activate a Virtual Environment
 
 ```bash 
 python -m venv env
 source env/bin/activate  # On Windows use `env\Scripts\activate`
-
+```
 ### 3. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
-
+```
 ### 4. Create and Configure .env File
 
 Create a .env file in the root directory of the project (where manage.py is located) with the following content:
 ```bash 
 DB_PASSWORD=your_db_password
 DB_HOST=your_aws_rds_endpoint
-
+```
 Replace your_db_password and your_aws_rds_endpoint with your actual database password and RDS endpoint.
 
 ### 5. Apply Database Migrations
@@ -88,12 +89,12 @@ Run the following command to set up the database schema:
 
 ```bash
 python manage.py migrate
-
+```
 ### 6. Run the Development Server
 Start the Django development server:
 ```bash 
 python manage.py runserver
-
+```
 Access the application at http://localhost:8000.
 
 ### 7. Run Tests
@@ -102,7 +103,7 @@ To run tests, use the following command:
 
 ```bash 
 python manage.py test
-
+```
 
 
 ## Troubleshooting
