@@ -13,6 +13,10 @@ This project is a stock trading application built with Django and PostgreSQL. It
 - PostgresSql
 - AWS RDS
 
+## API Documentation
+
+For API documentation please goto [Detailed Documentation](docs/API_DOCS.md).
+
 ## Getting Started
 
 ### 1. Clone the Repository

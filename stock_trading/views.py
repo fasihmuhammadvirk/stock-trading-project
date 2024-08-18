@@ -1,64 +1,102 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from rest_framework.decorators import action
-from django.shortcuts import get_object_or_404
-from django.core.cache import cache
-from .models import User, StockData, Transaction
-from .serializers import UserSerializer, StockDataSerializer, TransactionSerializer
-from .tasks import process_transaction
-from rest_framework.generics import GenericAPIView
+from .models import AppUser, StockData, Transaction
+from .serializers import AppUserSerializer, StockDataSerializer, TransactionSerializer
 
-class SayHello(viewsets.ModelViewSet):
-    @action(detail=False, methods=['get'])
-    def hello(self, request):
-        return Response({"message": "Use /Swagger to User API Documentation."}, status=status.HTTP_200_OK)
+class Greet(viewsets.ViewSet):
+    def list(self, request):
+        return Response({"message": "use /swagger to see API documentation"})
 
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
 
-    @action(detail=True, methods=['get'])
-    def retrieve_user(self, request, pk=None):
-        user = cache.get(f'user_{pk}')
-        if not user:
-            user = get_object_or_404(User, pk=pk)
-            cache.set(f'user_{pk}', user)
-        serializer = UserSerializer(user)
+class AppUserViewSet(viewsets.ViewSet):
+
+    def create(self, request):
+        serializer = AppUserSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def retrieve(self, request, username=None):
+        try:
+            user = AppUser.objects.get(username=username)
+            serializer = AppUserSerializer(user)
+            return Response(serializer.data)
+        except AppUser.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+class StockDataViewSet(viewsets.ViewSet):
+
+    def create(self, request):
+        serializer = StockDataSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def list(self, request):
+        stocks = StockData.objects.all()
+        serializer = StockDataSerializer(stocks, many=True)
         return Response(serializer.data)
 
-class StockDataViewSet(viewsets.ModelViewSet):
-    queryset = StockData.objects.all()
-    serializer_class = StockDataSerializer
+    def retrieve(self, request, ticker=None):
+        try:
+            stock = StockData.objects.get(ticker=ticker)
+            serializer = StockDataSerializer(stock)
+            return Response(serializer.data)
+        except StockData.DoesNotExist:
+            return Response({"error": "Stock not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    @action(detail=True, methods=['get'])
-    def retrieve_stock(self, request, pk=None):
-        stock_data = cache.get(f'stock_{pk}')
-        if not stock_data:
-            stock_data = get_object_or_404(StockData, pk=pk)
-            cache.set(f'stock_{pk}', stock_data)
-        serializer = StockDataSerializer(stock_data)
-        return Response(serializer.data)
+class TransactionViewSet(viewsets.ViewSet):
 
-class TransactionViewSet(viewsets.ModelViewSet):
-    queryset = Transaction.objects.all()
-    serializer_class = TransactionSerializer
+    def create(self, request):
+        user_id = request.data.get('user_id')
+        ticker = request.data.get('ticker')
+        transaction_type = request.data.get('transaction_type')
+        transaction_volume = int(request.data.get('transaction_volume'))
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        process_transaction.delay(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        try:
+            user = AppUser.objects.get(user_id=user_id)
+            stock = StockData.objects.get(ticker=ticker)
 
-    @action(detail=True, methods=['get'], url_path='user-transactions')
-    def retrieve_user_transactions(self, request, pk=None):
-        transactions = Transaction.objects.filter(user_id=pk)
+            transaction_price = stock.close_price * transaction_volume
+
+            if transaction_type == 'buy' and user.balance < transaction_price:
+                return Response({"error": "Insufficient balance"}, status=status.HTTP_400_BAD_REQUEST)
+
+            if transaction_type == 'buy':
+                user.balance -= transaction_price
+            elif transaction_type == 'sell':
+                user.balance += transaction_price
+
+            user.save()
+
+            transaction = Transaction.objects.create(
+                user=user,
+                ticker=ticker,
+                transaction_type=transaction_type,
+                transaction_volume=transaction_volume,
+                transaction_price=transaction_price
+            )
+
+            serializer = TransactionSerializer(transaction)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except AppUser.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        except StockData.DoesNotExist:
+            return Response({"error": "Stock not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    def list(self, request, user_id=None):
+        transactions = Transaction.objects.filter(user_id=user_id)
         serializer = TransactionSerializer(transactions, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['get'], url_path='user-transactions-range')
-    def retrieve_user_transactions_range(self, request, pk=None):
-        start_timestamp = request.query_params.get('start_timestamp')
-        end_timestamp = request.query_params.get('end_timestamp')
-        transactions = Transaction.objects.filter(user_id=pk, timestamp__range=[start_timestamp, end_timestamp])
+    def retrieve(self, request, user_id=None, start_timestamp=None, end_timestamp=None):
+        transactions = Transaction.objects.filter(
+            user_id=user_id,
+            timestamp__gte=start_timestamp,
+            timestamp__lte=end_timestamp
+        )
         serializer = TransactionSerializer(transactions, many=True)
         return Response(serializer.data)

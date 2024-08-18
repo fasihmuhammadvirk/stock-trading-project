@@ -1,17 +1,17 @@
 from rest_framework import serializers
-from .models import User, StockData, Transaction
+from .models import AppUser, StockData, Transaction
 
-class UserSerializer(serializers.ModelSerializer):
+class AppUserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = ['id', 'username', 'balance']
+        model = AppUser
+        fields = ['user_id', 'username', 'balance']
 
 class StockDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = StockData
-        fields = ['ticker', 'open_price', 'close_price', 'high', 'low', 'volume', 'timestamp']
+        fields = '__all__'
 
 class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
-        fields = ['id', 'user', 'ticker', 'transaction_type', 'transaction_volume', 'transaction_price', 'timestamp']
+        fields = '__all__'
